@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .user{
+            background-color: #03b1ff;
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+        }
+
+        .assistant{
+            background-color: #9c27b0;
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+        }
+
+        #loading {
+            width: 10px;
+            height: 10px;
+            border: 5px solid #f3f3f3;  /* Fondo claro */
+            border-top: 5px solid #3498db;  /* Color de la animación */
+            border-radius: 50%;  /* Hace el borde redondo */
+            animation: spin 1s linear infinite;  /* Animación */
+            margin: 0px auto;  /* Centrado en el contenedor */
+        }
+
+        /* Animación de giro */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="divChat">
+        <p class="assistant">Hola, dime algo!</p>
+    </div>
+    <div id="loading" style="display: none;"></div>
+    <div>
+        <textarea name="txtPrompt" id="txtPrompt" placeholder="Escribe algo." cols="30" rows="5"></textarea>
+        <br>
+        <button type="button" id="btnSend">Enviar</button>
+    </div>
+
+    <script>
+        const btnSend = document.getElementById('btnSend');
+        const txtPrompt = document.getElementById('txtPrompt');
+        const divChat = document.getElementById('divChat');
+        
+        btnSend.addEventListener('click', async () => {
+            try{
+                const prompt = txtPrompt.value.trim();
+                if(!prompt){
+                    return alert('Debes ingresar un prompt!');
+                }
+
+                appendMessageToChat(prompt, 'user');
+
+                txtPrompt.value = '';
+
+                showLoading();
+
+                const response = await sendPrompt({ prompt:prompt });
+
+                hideLoading();
+
+                appendMessageToChat(response.data, 'assistant');
+
+            }catch(error){
+                console.log(error);
+            }
+        });
+
+        const sendPrompt = async (data) => {
+            const response = await fetch('http://localhost:3000/chat', {
+                method: 'POST',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const json = await response.json();
+
+            return json;
+        }
+
+        // En este metodo me ayudo chatGPT para el efecto de escritura
+        // Solo agrega el texto al chat
+        const appendMessageToChat = (message, role) => {
+            const p = document.createElement('p');
+            p.classList.add(role);
+
+            // Variable para llevar el control del índice de la letra actual
+            let i = 0;
+
+            // Función que se ejecuta cada cierto intervalo para imprimir letra por letra
+            const typeWriter = () => {
+                if (i < message.length) {
+                    p.textContent += message[i];  // Agrega una letra a la vez
+                    i++;
+                } else {
+                    clearInterval(interval);  // Detenemos el intervalo cuando se imprime todo el mensaje
+                }
+            };
+
+            // Establecemos el intervalo, ajusta el tiempo según la velocidad que desees
+            const interval = setInterval(typeWriter, 100);  // 100ms entre cada letra
+
+            divChat.append(p);  // Agregamos el <p> al div donde se mostrará el mensaje
+        };
+
+        function showLoading() {
+            document.getElementById("loading").style.display = "flex";
+        }
+
+        function hideLoading() {
+            document.getElementById("loading").style.display = "none";
+        }
+    </script>
+</body>
+</html>
