@@ -91,4 +91,5 @@ const sendPrompt = async (data) => {
 }
 
 ````
-
+### Interfaz Web
+![magen chat deepseek con node](https://raw.githubusercontent.com/SuperDev777/chat-deepseek/refs/heads/main/chat.png)
